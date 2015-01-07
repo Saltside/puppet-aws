@@ -13,8 +13,12 @@ module Facter::Util::AWSTags
   def self.get_tags
 
     httpcall = Net::HTTP.new(INSTANCE_HOST)
-    resp, instance_id = httpcall.get2(INSTANCE_ID_URL)
-    resp, region = httpcall.get2(INSTANCE_REGION_URL)
+
+    resp = httpcall.get(INSTANCE_ID_URL)
+    instance_id = resp.body
+
+    resp = httpcall.get(INSTANCE_REGION_URL)
+    region = resp.body
 
     # Cut out availability zone marker.
     # For example if region == "us-east-1c" after cutting out it will be
