@@ -11,10 +11,6 @@ class aws::sdk {
 
   } else {
 
-    class { 'ruby':
-      rubygems_update => false
-    }
-
     package { 'nokogiri':
       ensure   => ['1.5.6'],
       provider => 'gem',
