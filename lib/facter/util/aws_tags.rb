@@ -1,6 +1,7 @@
 require 'rubygems'
 require 'aws-sdk'
-require "net/http"
+require 'net/http'
+require 'timeout'
 
 module Facter::Util::AWSTags
 
@@ -11,13 +12,15 @@ module Facter::Util::AWSTags
 
   def self.get_tags
 
-    httpcall = Net::HTTP.new(INSTANCE_HOST)
+    Timeout::timeout(5) {
+      httpcall = Net::HTTP.new(INSTANCE_HOST)
 
-    resp = httpcall.get(INSTANCE_ID_URL)
-    instance_id = resp.body
+      resp = httpcall.get(INSTANCE_ID_URL)
+      instance_id = resp.body
 
-    resp = httpcall.get(INSTANCE_REGION_URL)
-    region = resp.body
+      resp = httpcall.get(INSTANCE_REGION_URL)
+      region = resp.body
+    }
 
     # Cut out availability zone marker.
     # For example if region == "us-east-1c" after cutting out it will be

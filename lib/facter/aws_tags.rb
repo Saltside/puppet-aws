@@ -1,3 +1,6 @@
 require "facter/util/aws_tags"
 
-Facter::Util::AWSTags.get_tags
+begin
+  Facter::Util::AWSTags.get_tags
+rescue
+end
