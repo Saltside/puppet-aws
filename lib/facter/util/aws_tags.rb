@@ -12,7 +12,7 @@ module Facter::Util::AWSTags
 
   def self.get_tags
 
-    Timeout::timeout(5) {
+    Timeout::timeout(30) {
       httpcall = Net::HTTP.new(INSTANCE_HOST)
 
       resp = httpcall.get(INSTANCE_ID_URL)
