@@ -18,7 +18,7 @@ module Facter::Util::AWSTags
     cache = Hash.new
 
     # If the cache file exists and load it, otherwise fetch origin
-    if !File.exists?(CACHE_FILE)
+    if File.exists?(CACHE_FILE)
       cache = self.load_cache
     else
       cache = self.fetch_origin
@@ -26,7 +26,7 @@ module Facter::Util::AWSTags
 
     # cache is a hash so create a fact for each
     cache.each_pair do | key, value |
-      Facter.add(symbol) { setcode { value } }
+      Facter.add(key) { setcode { value } }
     end
   end
 
@@ -43,7 +43,7 @@ module Facter::Util::AWSTags
     resp = httpcall.get(INSTANCE_REGION_URL)
     region = resp.body
 
-    cache = {
+    cache = {
       :instance_id => instance_id,
       :region => region,
     }
@@ -66,12 +66,12 @@ module Facter::Util::AWSTags
       AWS.ec2.instances[instance_id].tags.to_h
     end
 
-    File.open(CACHE_FILE, 'w') {|f| f.write cache.to_yaml }
-
     tags.each_pair do | key, value |
       symbol = "ec2_tag_#{key.gsub(/\-|\//, '_')}".to_sym
       cache[symbol] = value
     end
+
+    File.open(CACHE_FILE, 'w') {|f| f.write cache.to_yaml }
 
     # Return the cache
     cache
