@@ -2,6 +2,7 @@ require 'rubygems'
 require 'aws-sdk'
 require "net/http"
 require 'retriable'
+require 'yaml'
 
 module Facter::Util::AWSTags
 
@@ -10,11 +11,42 @@ module Facter::Util::AWSTags
   INSTANCE_ID_URL = '/latest/meta-data/instance-id'
   INSTANCE_REGION_URL = '/latest/meta-data/placement/availability-zone'
 
-  def self.get_tags
+  # File to store tags in, this should be cleared every reboot
+  CACHE_FILE = '/tmp/puppet_aws_tags.cache'
 
+  def self.get_tags
+    cache = Hash.new
+
+    # If the cache file exists and load it, otherwise fetch origin
+    if File.exists?(CACHE_FILE)
+      cache = self.load_cache
+    else
+      cache = self.fetch_origin
+    end
+
+    # cache is a hash so create a fact for each
+    cache.each_pair do | key, value |
+      Facter.add(key) { setcode { value } }
+    end
+  end
+
+  def self.load_cache
+    YAML.load_file(CACHE_FILE)
+  end
+
+  def self.fetch_origin
     httpcall = Net::HTTP.new(INSTANCE_HOST)
-    resp, instance_id = httpcall.get2(INSTANCE_ID_URL)
-    resp, region = httpcall.get2(INSTANCE_REGION_URL)
+
+    resp = httpcall.get(INSTANCE_ID_URL)
+    instance_id = resp.body
+
+    resp = httpcall.get(INSTANCE_REGION_URL)
+    region = resp.body
+
+    cache = {
+      :instance_id => instance_id,
+      :region => region,
+    }
 
     # Cut out availability zone marker.
     # For example if region == "us-east-1c" after cutting out it will be
@@ -34,11 +66,15 @@ module Facter::Util::AWSTags
       AWS.ec2.instances[instance_id].tags.to_h
     end
 
-    # tags is a hash so create a fact for each
     tags.each_pair do | key, value |
       symbol = "ec2_tag_#{key.gsub(/\-|\//, '_')}".to_sym
-      Facter.add(symbol) { setcode { value } }
+      cache[symbol] = value
     end
+
+    File.open(CACHE_FILE, 'w') {|f| f.write cache.to_yaml }
+
+    # Return the cache
+    cache
   end
 
 end
