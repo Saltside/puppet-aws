@@ -31,6 +31,10 @@ class aws::sdk {
       ensure   => ['1.26.0'],
       provider => 'gem',
     }
+    package { 'retriable':
+      ensure   => ['2.0.2'],
+      provider => 'gem',
+    }
 
   }
 
