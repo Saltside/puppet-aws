@@ -1,6 +1,7 @@
 require 'rubygems'
 require 'aws-sdk'
 require "net/http"
+require 'retriable'
 
 module Facter::Util::AWSTags
 
@@ -29,7 +30,9 @@ module Facter::Util::AWSTags
         :credential_provider => AWS::Core::CredentialProviders::EC2Provider.new,
         :region => region)
 
-    tags = AWS.ec2.instances[instance_id].tags.to_h
+    tags = Retriable.retriable tries: 10 do
+      AWS.ec2.instances[instance_id].tags.to_h
+    end
 
     # tags is a hash so create a fact for each
     tags.each_pair do | key, value |
