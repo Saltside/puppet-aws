@@ -19,7 +19,7 @@ module Facter::Util::AWSTags
 
     # If the cache file exists and load it, otherwise fetch origin
     if File.exists?(CACHE_FILE)
-      YAML.load_file(CACHE_FILE)
+      cache = YAML.load_file(CACHE_FILE)
     else
       httpcall = Net::HTTP.new(INSTANCE_HOST)
 
